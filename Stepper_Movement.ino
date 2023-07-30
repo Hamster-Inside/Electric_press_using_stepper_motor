@@ -4,11 +4,11 @@ void make_step()
   delayMicroseconds(delay_between_steps);
   if (digitalRead(DIR) == HIGH)
   {
-    incremental_stepper_motor_current_step += 1;
+    stepper_motor_current_step += 1;
   }
   else
   {
-    incremental_stepper_motor_current_step -= 1;
+    stepper_motor_current_step -= 1;
   }
 }
 

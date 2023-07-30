@@ -11,7 +11,7 @@
 #define END_STOP 29
 #define pot A0
 long current_encoder_state = 0;
-long incremental_stepper_motor_current_step = 0;
+long stepper_motor_current_step = 0;
 int delay_between_steps = 60;
 int fastest_possible_delay_between = 60;
 long set_position = 198000;
@@ -31,18 +31,22 @@ void encoder_input_a();
 void encoder_input_b();
 #line 1 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
 void go_to_base();
-#line 15 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
+#line 11 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
 void move_up();
-#line 28 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
+#line 47 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
 void move_down();
-#line 37 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
+#line 56 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
 void move_to_set_position();
-#line 78 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
+#line 97 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
 void base_move_decider();
-#line 95 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
+#line 114 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
 bool is_base_button_clicked();
-#line 100 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
+#line 120 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
 bool is_base_end_stop_clicked();
+#line 126 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
+bool is_UP_BUTTON_clicked();
+#line 132 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Press_Logic.ino"
+bool is_DOWN_BUTTON_clicked();
 #line 1 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Stepper_Movement.ino"
 void make_step();
 #line 15 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Stepper_Movement.ino"
@@ -81,13 +85,13 @@ void loop()
   {
     move_down();
     Serial.println("Encoder state POS = " + String(Encoder_state));
-    Serial.println("Stepper motor position = " + String(incremental_stepper_motor_current_step));
+    Serial.println("Stepper motor position = " + String(stepper_motor_current_step));
   }
   if (digitalRead(UP_BUTTON) == HIGH && digitalRead(DOWN_BUTTON) == LOW)
   {
     move_up();
     Serial.println("Encoder state POS = " + String(Encoder_state));
-    Serial.println("Stepper motor position = " + String(incremental_stepper_motor_current_step));
+    Serial.println("Stepper motor position = " + String(stepper_motor_current_step));
   }
   while (digitalRead(BASE_BUTTON) == LOW)
   {
@@ -165,20 +169,39 @@ void go_to_base()
   }
   delay_between_steps = fastest_possible_delay_between;
   move_up();
-  Encoder_state = 0;
-  incremental_stepper_motor_current_step = 0;
-  Serial.println("BASED");
-  can_go_auto = true;
 }
 void move_up()
 {
+  Serial.println("moving up");
+  bool escapeOuterLoop = false;
+  delayMicroseconds(300);
   set_direction_to_go_up();
-  while ((digitalRead(END_STOP) == HIGH && digitalRead(UP_BUTTON) == HIGH) || go_to_base_signal == true)
+  while ((!is_base_end_stop_clicked() && is_UP_BUTTON_clicked()) || go_to_base_signal == true)
   {
     make_step();
+    if (is_base_button_clicked())
+    {
+      while (!escapeOuterLoop)
+      {
+        delayMicroseconds(300);
+        if (!is_base_button_clicked())
+        {
+          escapeOuterLoop = true;
+          break;
+        }
+      }
+    }
+    if (escapeOuterLoop)
+    {
+      break;
+    }
     if (is_base_end_stop_clicked())
     {
       go_to_base_signal = false;
+      can_go_auto = true;
+      Encoder_state = 0;
+      stepper_motor_current_step = 0;
+      Serial.println("BASED");
     }
   }
 }
@@ -252,12 +275,26 @@ void base_move_decider()
 
 bool is_base_button_clicked()
 {
+  // base button is NC
   return (digitalRead(BASE_BUTTON) == LOW) ? true : false;
 }
 
 bool is_base_end_stop_clicked()
 {
+  // End-stop switch is NC so if cable is broken or table is at the end stop it will return base as true so LOW
   return (digitalRead(END_STOP) == HIGH) ? false : true;
+}
+
+bool is_UP_BUTTON_clicked()
+{
+  // button to go up is NO
+  return (digitalRead(UP_BUTTON) == HIGH) ? true : false;
+}
+
+bool is_DOWN_BUTTON_clicked()
+{
+  // button to go down is NO
+  return (digitalRead(DOWN_BUTTON) == HIGH) ? true : false;
 }
 #line 1 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Stepper_Movement.ino"
 void make_step()
@@ -266,11 +303,11 @@ void make_step()
   delayMicroseconds(delay_between_steps);
   if (digitalRead(DIR) == HIGH)
   {
-    incremental_stepper_motor_current_step += 1;
+    stepper_motor_current_step += 1;
   }
   else
   {
-    incremental_stepper_motor_current_step -= 1;
+    stepper_motor_current_step -= 1;
   }
 }
 

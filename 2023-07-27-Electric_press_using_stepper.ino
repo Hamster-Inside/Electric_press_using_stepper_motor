@@ -9,7 +9,7 @@
 #define END_STOP 29
 #define pot A0
 long current_encoder_state = 0;
-long incremental_stepper_motor_current_step = 0;
+long stepper_motor_current_step = 0;
 int delay_between_steps = 60;
 int fastest_possible_delay_between = 60;
 long set_position = 198000;
@@ -50,13 +50,13 @@ void loop()
   {
     move_down();
     Serial.println("Encoder state POS = " + String(Encoder_state));
-    Serial.println("Stepper motor position = " + String(incremental_stepper_motor_current_step));
+    Serial.println("Stepper motor position = " + String(stepper_motor_current_step));
   }
   if (digitalRead(UP_BUTTON) == HIGH && digitalRead(DOWN_BUTTON) == LOW)
   {
     move_up();
     Serial.println("Encoder state POS = " + String(Encoder_state));
-    Serial.println("Stepper motor position = " + String(incremental_stepper_motor_current_step));
+    Serial.println("Stepper motor position = " + String(stepper_motor_current_step));
   }
   while (digitalRead(BASE_BUTTON) == LOW)
   {

@@ -1,7 +1,7 @@
 # 1 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\2023-07-27-Electric_press_using_stepper.ino"
 # 11 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\2023-07-27-Electric_press_using_stepper.ino"
 long current_encoder_state = 0;
-long incremental_stepper_motor_current_step = 0;
+long stepper_motor_current_step = 0;
 int delay_between_steps = 60;
 int fastest_possible_delay_between = 60;
 long set_position = 198000;
@@ -42,13 +42,13 @@ void loop()
   {
     move_down();
     Serial.println("Encoder state POS = " + String(Encoder_state));
-    Serial.println("Stepper motor position = " + String(incremental_stepper_motor_current_step));
+    Serial.println("Stepper motor position = " + String(stepper_motor_current_step));
   }
   if (digitalRead(23) == 0x1 && digitalRead(22) == 0x0)
   {
     move_up();
     Serial.println("Encoder state POS = " + String(Encoder_state));
-    Serial.println("Stepper motor position = " + String(incremental_stepper_motor_current_step));
+    Serial.println("Stepper motor position = " + String(stepper_motor_current_step));
   }
   while (digitalRead(24) == 0x0)
   {
@@ -124,20 +124,39 @@ void go_to_base()
   }
   delay_between_steps = fastest_possible_delay_between;
   move_up();
-  Encoder_state = 0;
-  incremental_stepper_motor_current_step = 0;
-  Serial.println("BASED");
-  can_go_auto = true;
 }
 void move_up()
 {
+  Serial.println("moving up");
+  bool escapeOuterLoop = false;
+  delayMicroseconds(300);
   set_direction_to_go_up();
-  while ((digitalRead(29) == 0x1 && digitalRead(23) == 0x1) || go_to_base_signal == true)
+  while ((!is_base_end_stop_clicked() && is_UP_BUTTON_clicked()) || go_to_base_signal == true)
   {
     make_step();
+    if (is_base_button_clicked())
+    {
+      while (!escapeOuterLoop)
+      {
+        delayMicroseconds(300);
+        if (!is_base_button_clicked())
+        {
+          escapeOuterLoop = true;
+          break;
+        }
+      }
+    }
+    if (escapeOuterLoop)
+    {
+      break;
+    }
     if (is_base_end_stop_clicked())
     {
       go_to_base_signal = false;
+      can_go_auto = true;
+      Encoder_state = 0;
+      stepper_motor_current_step = 0;
+      Serial.println("BASED");
     }
   }
 }
@@ -211,12 +230,26 @@ void base_move_decider()
 
 bool is_base_button_clicked()
 {
+  // base button is NC
   return (digitalRead(24) == 0x0) ? true : false;
 }
 
 bool is_base_end_stop_clicked()
 {
+  // End-stop switch is NC so if cable is broken or table is at the end stop it will return base as true so LOW
   return (digitalRead(29) == 0x1) ? false : true;
+}
+
+bool is_UP_BUTTON_clicked()
+{
+  // button to go up is NO
+  return (digitalRead(23) == 0x1) ? true : false;
+}
+
+bool is_DOWN_BUTTON_clicked()
+{
+  // button to go down is NO
+  return (digitalRead(22) == 0x1) ? true : false;
 }
 # 1 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\Stepper_Movement.ino"
 void make_step()
@@ -225,11 +258,11 @@ void make_step()
   delayMicroseconds(delay_between_steps);
   if (digitalRead(28) == 0x1)
   {
-    incremental_stepper_motor_current_step += 1;
+    stepper_motor_current_step += 1;
   }
   else
   {
-    incremental_stepper_motor_current_step -= 1;
+    stepper_motor_current_step -= 1;
   }
 }
 
