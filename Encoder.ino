@@ -1,4 +1,3 @@
-// INTERRUPTY Z ENCODERA
 void encoder_input_a()
 {
 
