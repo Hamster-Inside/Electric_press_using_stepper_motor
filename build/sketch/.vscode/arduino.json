@@ -1,8 +1,0 @@
-#line 1 "D:\\Programowanie Arduino\\2023-07-27-Electric_press_using_stepper\\.vscode\\arduino.json"
-{
-    "sketch": "2023-07-27-Electric_press_using_stepper.ino",
-    "configuration": "cpu=atmega2560",
-    "board": "arduino:avr:mega",
-    "output": "build",
-    "port": "COM4"
-}
