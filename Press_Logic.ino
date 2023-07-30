@@ -5,7 +5,6 @@ void go_to_base()
   {
     go_to_base_signal = true;
   }
-  delay_between_steps = fastest_possible_delay_between;
   move_up();
 }
 void move_up()
@@ -17,12 +16,12 @@ void move_up()
   while ((!is_base_end_stop_clicked() && is_UP_BUTTON_clicked()) || go_to_base_signal == true)
   {
     make_step();
-    if (is_base_button_clicked())
+    if (is_BASE_BUTTON_clicked())
     {
       while (!escapeOuterLoop)
       {
         delayMicroseconds(300);
-        if (!is_base_button_clicked())
+        if (!is_BASE_BUTTON_clicked())
         {
           escapeOuterLoop = true;
           break;
@@ -55,7 +54,7 @@ void move_down()
 
 void move_to_set_position()
 {
-  while (is_base_button_clicked())
+  while (is_BASE_BUTTON_clicked())
   {
     delayMicroseconds(1000);
   }
@@ -70,7 +69,7 @@ void move_to_set_position()
     while (set_position > Encoder_state)
     {
       make_step();
-      if (is_base_button_clicked())
+      if (is_BASE_BUTTON_clicked())
       {
         break;
       }
@@ -82,13 +81,13 @@ void move_to_set_position()
     while (set_position < Encoder_state)
     {
       make_step();
-      if (is_base_button_clicked())
+      if (is_BASE_BUTTON_clicked())
       {
         break;
       }
     }
   }
-  while (is_base_button_clicked())
+  while (is_BASE_BUTTON_clicked())
   {
     delayMicroseconds(1000);
   }
@@ -111,7 +110,7 @@ void base_move_decider()
   }
 }
 
-bool is_base_button_clicked()
+bool is_BASE_BUTTON_clicked()
 {
   // base button is NC
   return (digitalRead(BASE_BUTTON) == LOW) ? true : false;
@@ -133,4 +132,9 @@ bool is_DOWN_BUTTON_clicked()
 {
   // button to go down is NO
   return (digitalRead(DOWN_BUTTON) == HIGH) ? true : false;
+}
+
+int get_speed_from_potentiometer()
+{
+  return map(analogRead(pot), 0, 1023, 300, 40);
 }

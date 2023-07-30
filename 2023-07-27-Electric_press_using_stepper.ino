@@ -11,8 +11,7 @@
 long current_encoder_state = 0;
 long stepper_motor_current_step = 0;
 int delay_between_steps = 60;
-int fastest_possible_delay_between = 60;
-long set_position = 198000;
+long set_position = 198000; // value based on readings from encoder, in future teach using buttons
 volatile long Encoder_state = 0;
 bool go_to_base_signal = false;
 bool is_based = false;
@@ -41,24 +40,23 @@ void setup()
 
 void loop()
 {
-  if (digitalRead(DOWN_BUTTON) == LOW && digitalRead(UP_BUTTON) == LOW)
+  if (!is_DOWN_BUTTON_clicked() && !is_UP_BUTTON_clicked())
   {
-    int analogValue = analogRead(pot);                        // Read analog value from A0
-    delay_between_steps = map(analogValue, 0, 1023, 300, 40); // Map the analog value to a range of 0-255
+    delay_between_steps = get_speed_from_potentiometer();
   }
-  if (digitalRead(DOWN_BUTTON) == HIGH && digitalRead(UP_BUTTON) == LOW)
+  if (is_DOWN_BUTTON_clicked() && !is_UP_BUTTON_clicked())
   {
     move_down();
     Serial.println("Encoder state POS = " + String(Encoder_state));
     Serial.println("Stepper motor position = " + String(stepper_motor_current_step));
   }
-  if (digitalRead(UP_BUTTON) == HIGH && digitalRead(DOWN_BUTTON) == LOW)
+  if (is_UP_BUTTON_clicked() && !is_DOWN_BUTTON_clicked())
   {
     move_up();
     Serial.println("Encoder state POS = " + String(Encoder_state));
     Serial.println("Stepper motor position = " + String(stepper_motor_current_step));
   }
-  while (digitalRead(BASE_BUTTON) == LOW)
+  while (is_BASE_BUTTON_clicked())
   {
     base_move_decider();
   }
